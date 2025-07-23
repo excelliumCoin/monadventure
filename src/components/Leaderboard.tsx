@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { LeaderboardData, multiSynqAPI } from '@/lib/multisynq'
 
 interface LeaderboardProps {
@@ -14,7 +14,7 @@ export default function Leaderboard({ refreshTrigger = 0, limit = 10 }: Leaderbo
   const [error, setError] = useState<string>('');
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
     setLoading(true);
     setError('');
     
@@ -27,11 +27,11 @@ export default function Leaderboard({ refreshTrigger = 0, limit = 10 }: Leaderbo
     } finally {
       setLoading(false);
     }
-  };
+  }, [limit]);
 
   useEffect(() => {
     fetchLeaderboard();
-  }, [refreshTrigger, limit]);
+  }, [refreshTrigger, fetchLeaderboard]);
 
   // Auto-refresh every 30 seconds
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function Leaderboard({ refreshTrigger = 0, limit = 10 }: Leaderbo
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [loading]);
+  }, [loading, fetchLeaderboard]);
 
   const getRankColor = (rank: number) => {
     switch (rank) {

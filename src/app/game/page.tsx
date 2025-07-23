@@ -33,7 +33,7 @@ export default function GamePage() {
       if (!available) {
         setError('MetaMask is required to play this game. Please install MetaMask to continue.');
       }
-    } catch (err) {
+    } catch (error) {
       console.error('MetaMask check failed:', err);
     }
   };
@@ -45,7 +45,7 @@ export default function GamePage() {
       if (!connected) {
         setError('Failed to connect to Monad testnet. Please check your connection.');
       }
-    } catch (err) {
+    } catch (error) {
       setError('Blockchain initialization failed');
       console.error('Blockchain init error:', err);
     }
@@ -59,8 +59,8 @@ export default function GamePage() {
       const walletInfo = await monadBlockchain.connectMetaMask();
       setWallet(walletInfo);
       setGameMessage('MetaMask connected successfully! All game actions will be recorded on-chain.');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect MetaMask');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to connect MetaMask');
     } finally {
       setLoading(false);
     }
@@ -80,8 +80,8 @@ export default function GamePage() {
       setSession(newSession);
       setGameMessage('Game session started! All your moves will be recorded as blockchain transactions.');
       setLeaderboardRefresh(prev => prev + 1);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to start game session');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to start game session');
     } finally {
       setLoading(false);
     }
@@ -140,8 +140,8 @@ export default function GamePage() {
       if (result.newScore > 0) {
         setLeaderboardRefresh(prev => prev + 1);
       }
-    } catch (err) {
-      throw new Error(err instanceof Error ? err.message : 'Move failed');
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Move failed');
     }
   };
 
@@ -192,8 +192,8 @@ export default function GamePage() {
       if (result.newScore > 0) {
         setLeaderboardRefresh(prev => prev + 1);
       }
-    } catch (err) {
-      throw new Error(err instanceof Error ? err.message : 'Action failed');
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'Action failed');
     }
   };
 
@@ -213,7 +213,7 @@ export default function GamePage() {
       } else {
         setError('Faucet request failed. Please try again later.');
       }
-    } catch (err) {
+    } catch (error) {
       setError('Failed to request testnet tokens');
     } finally {
       setLoading(false);
@@ -234,7 +234,7 @@ export default function GamePage() {
     try {
       await monadBlockchain.refreshBalance();
       setGameMessage('Balance refreshed successfully!');
-    } catch (err) {
+    } catch (error) {
       setError('Failed to refresh balance');
     }
   };
