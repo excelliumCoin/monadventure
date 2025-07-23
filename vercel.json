@@ -8,14 +8,5 @@
     "app/**/*.{js,ts,tsx}": {
       "maxDuration": 30
     }
-  },
-  "env": {
-    "NEXT_PUBLIC_MONAD_RPC_URL": "@monad_rpc_url",
-    "NEXT_PUBLIC_MONAD_CHAIN_ID": "@monad_chain_id",
-    "NEXT_PUBLIC_MONAD_EXPLORER_URL": "@monad_explorer_url",
-    "NEXT_PUBLIC_MULTISYNQ_API_URL": "@multisynq_api_url",
-    "NEXT_PUBLIC_MULTISYNQ_API_KEY": "@multisynq_api_key",
-    "NEXT_PUBLIC_GAME_NAME": "@game_name",
-    "NEXT_PUBLIC_GAME_VERSION": "@game_version"
   }
 }
