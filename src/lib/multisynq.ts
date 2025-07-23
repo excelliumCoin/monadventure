@@ -33,7 +33,7 @@ export interface LeaderboardData {
 // MultiSynq API configuration
 const MULTISYNQ_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_MULTISYNQ_API_URL || "https://api.multisynq.io/v1",
-  API_KEY: process.env.NEXT_PUBLIC_MULTISYNQ_API_KEY || "demo_key_12345",
+  API_KEY: process.env.NEXT_PUBLIC_MULTISYNQ_API_KEY || "2mp2ZSWLJCwXGNka3uw3rxKM9CPqTSouwJKwcLX2vN",
   GAME_ID: "monad-adventure-v1"
 };
 
@@ -46,7 +46,7 @@ export class MultiSynqAPI {
     this.baseUrl = MULTISYNQ_CONFIG.BASE_URL;
   }
 
-  private async makeRequest<T>(
+  async makeRequest<T>(
     endpoint: string, 
     options: RequestInit = {}
   ): Promise<T> {
@@ -72,9 +72,12 @@ export class MultiSynqAPI {
       }
 
       return await response.json();
-    } catch (error) {
-      console.error(`MultiSynq API Error (${endpoint}):`, error);
-      throw error;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(`MultiSynq API Error (${endpoint}):`, error.message);
+        throw error;
+      }
+      throw new Error('Unknown API error');
     }
   }
 

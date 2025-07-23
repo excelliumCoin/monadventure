@@ -70,7 +70,7 @@ export class MonadBlockchain {
 
     try {
       // Request account access
-      const accounts = await window.ethereum.request({
+      const accounts: string[] = await window.ethereum.request({
         method: 'eth_requestAccounts'
       });
 
@@ -78,7 +78,7 @@ export class MonadBlockchain {
         throw new Error('No accounts found. Please unlock MetaMask and try again.');
       }
 
-      const address = accounts[0];
+      const address: string = accounts[0];
 
       // Add Monad testnet to MetaMask if not already added
       try {
@@ -102,7 +102,7 @@ export class MonadBlockchain {
       // Get balance
       let balance = '0 MON';
       try {
-        const balanceWei = await window.ethereum.request({
+        const balanceWei: string = await window.ethereum.request({
           method: 'eth_getBalance',
           params: [address, 'latest']
         });
