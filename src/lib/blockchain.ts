@@ -200,12 +200,40 @@ export class MonadBlockchain {
   }
 
   async sendGameTransaction(action: string, data?: object): Promise<TransactionResult> {
-    if (!this.currentWallet || this.currentWallet.provider !== 'MetaMask') {
-      throw new Error('MetaMask wallet required for transactions');
+    // Check if we're in browser environment
+    if (typeof window === 'undefined') {
+      return {
+        hash: '',
+        success: false,
+        error: 'Browser environment required for transactions'
+      };
     }
 
-    if (!window.ethereum) {
-      throw new Error('MetaMask not available');
+    // Check if MetaMask is installed
+    if (!window.ethereum || !window.ethereum.isMetaMask) {
+      return {
+        hash: '',
+        success: false,
+        error: 'MetaMask is not installed. Please install MetaMask to continue.'
+      };
+    }
+
+    // Check if wallet is connected
+    if (!this.currentWallet || this.currentWallet.provider !== 'MetaMask') {
+      return {
+        hash: '',
+        success: false,
+        error: 'Please connect your MetaMask wallet first'
+      };
+    }
+
+    // Check if connected to testnet
+    if (!this.connected) {
+      return {
+        hash: '',
+        success: false,
+        error: 'Not connected to Monad testnet'
+      };
     }
 
     try {
@@ -310,10 +338,16 @@ export class MonadBlockchain {
         }
       }
 
+      // Handle empty error objects or unknown errors
+      const errorMessage = error instanceof Error ? error.message : 
+                          (error && typeof error === 'object' && Object.keys(error).length === 0) ? 
+                          'Unknown transaction error - please check MetaMask and try again' :
+                          'Transaction failed';
+
       return {
         hash: '',
         success: false,
-        error: error instanceof Error ? error.message : 'Transaction failed'
+        error: errorMessage
       };
     }
   }
