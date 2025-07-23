@@ -12,7 +12,7 @@ export interface GameAction {
   type: 'move' | 'collect' | 'attack' | 'defend';
   direction?: 'north' | 'south' | 'east' | 'west';
   timestamp: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface LeaderboardEntry {

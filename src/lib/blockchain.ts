@@ -22,15 +22,24 @@ export interface TransactionResult {
   gasUsed?: string;
 }
 
+// Ethereum provider interfaces
+interface EthereumProvider {
+  isMetaMask?: boolean;
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  on: (event: string, callback: (...args: unknown[]) => void) => void;
+  removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
+}
+
+interface TransactionReceipt {
+  status: string;
+  blockNumber?: string;
+  gasUsed?: string;
+}
+
 // Declare ethereum object for TypeScript
 declare global {
   interface Window {
-    ethereum?: {
-      isMetaMask?: boolean;
-      request: (args: { method: string; params?: any[] }) => Promise<any>;
-      on: (event: string, callback: (...args: any[]) => void) => void;
-      removeListener: (event: string, callback: (...args: any[]) => void) => void;
-    };
+    ethereum?: EthereumProvider;
   }
 }
 
@@ -70,9 +79,9 @@ export class MonadBlockchain {
 
     try {
       // Request account access
-      const accounts: string[] = await window.ethereum.request({
+      const accounts = await window.ethereum.request({
         method: 'eth_requestAccounts'
-      });
+      }) as string[];
 
       if (!accounts || accounts.length === 0) {
         throw new Error('No accounts found. Please unlock MetaMask and try again.');
@@ -84,7 +93,6 @@ export class MonadBlockchain {
       try {
         await this.addMonadNetwork();
       } catch {
-        // eslint-disable-next-line no-console
         console.warn('Failed to add Monad network to MetaMask');
       }
 
@@ -95,23 +103,21 @@ export class MonadBlockchain {
           params: [{ chainId: `0x${MONAD_CONFIG.CHAIN_ID.toString(16)}` }],
         });
       } catch {
-        // eslint-disable-next-line no-console
         console.warn('Failed to switch to Monad network');
       }
 
       // Get balance
       let balance = '0 MON';
       try {
-        const balanceWei: string = await window.ethereum.request({
+        const balanceWei = await window.ethereum.request({
           method: 'eth_getBalance',
           params: [address, 'latest']
-        });
+        }) as string;
         
         // Convert from wei to MON (assuming 18 decimals)
         const balanceEth = parseInt(balanceWei, 16) / Math.pow(10, 18);
         balance = `${balanceEth.toFixed(4)} MON`;
       } catch {
-        // eslint-disable-next-line no-console
         console.warn('Failed to get balance');
         // For demo purposes, show a simulated balance
         balance = `${(Math.random() * 10).toFixed(4)} MON`;
@@ -125,7 +131,8 @@ export class MonadBlockchain {
       };
 
       // Listen for account changes
-      window.ethereum.on('accountsChanged', (accounts: string[]) => {
+      window.ethereum.on('accountsChanged', (...args: unknown[]) => {
+        const accounts = args[0] as string[];
         if (accounts.length === 0) {
           this.disconnect();
         } else {
@@ -157,7 +164,6 @@ export class MonadBlockchain {
       await window.ethereum.request({
         method: 'wallet_addEthereumChain',
         params: [{
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           chainId: `0x${MONAD_CONFIG.CHAIN_ID.toString(16)}`,
           chainName: 'Monad Testnet',
           nativeCurrency: {
@@ -175,7 +181,7 @@ export class MonadBlockchain {
     }
   }
 
-  async requestTestnetTokens(address: string): Promise<boolean> {
+  async requestTestnetTokens(): Promise<boolean> {
     if (!this.currentWallet || this.currentWallet.provider !== 'MetaMask') {
       throw new Error('MetaMask wallet required for faucet requests');
     }
@@ -223,6 +229,7 @@ export class MonadBlockchain {
         to: this.currentWallet.address, // Send to self to record game action
         value: '0x0', // 0 ETH/MON
         gas: '0x5208', // 30000 gas limit (higher for data)
+        data: gameDataHex
       };
 
       console.log('Sending real MetaMask transaction for game action:', action);
@@ -232,12 +239,12 @@ export class MonadBlockchain {
       const txHash = await window.ethereum.request({
         method: 'eth_sendTransaction',
         params: [transactionParams],
-      });
+      }) as string;
 
       console.log('Transaction sent, hash:', txHash);
 
       // Wait for transaction to be mined (simplified polling)
-      let receipt = null;
+      let receipt: TransactionReceipt | null = null;
       let attempts = 0;
       const maxAttempts = 30; // Wait up to 30 seconds
 
@@ -248,8 +255,8 @@ export class MonadBlockchain {
           receipt = await window.ethereum.request({
             method: 'eth_getTransactionReceipt',
             params: [txHash]
-          });
-        } catch (error) {
+          }) as TransactionReceipt | null;
+        } catch {
           console.log('Waiting for transaction confirmation...');
         }
         
@@ -320,11 +327,11 @@ export class MonadBlockchain {
       const receipt = await window.ethereum.request({
         method: 'eth_getTransactionReceipt',
         params: [txHash]
-      });
+      }) as TransactionReceipt | null;
 
       return {
         confirmed: receipt !== null,
-        blockNumber: receipt ? parseInt(receipt.blockNumber, 16) : undefined
+        blockNumber: receipt?.blockNumber ? parseInt(receipt.blockNumber, 16) : undefined
       };
     } catch (error) {
       console.error('Failed to get transaction status:', error);
@@ -341,7 +348,7 @@ export class MonadBlockchain {
       const balanceWei = await window.ethereum.request({
         method: 'eth_getBalance',
         params: [this.currentWallet.address, 'latest']
-      });
+      }) as string;
       
       const balanceEth = parseInt(balanceWei, 16) / Math.pow(10, 18);
       const balance = `${balanceEth.toFixed(4)} MON`;
