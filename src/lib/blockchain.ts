@@ -83,8 +83,9 @@ export class MonadBlockchain {
       // Add Monad testnet to MetaMask if not already added
       try {
         await this.addMonadNetwork();
-      } catch (error) {
-        console.warn('Failed to add Monad network to MetaMask:', error);
+      } catch {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to add Monad network to MetaMask');
       }
 
       // Switch to Monad testnet
@@ -93,8 +94,9 @@ export class MonadBlockchain {
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: `0x${MONAD_CONFIG.CHAIN_ID.toString(16)}` }],
         });
-      } catch (error) {
-        console.warn('Failed to switch to Monad network:', error);
+      } catch {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to switch to Monad network');
       }
 
       // Get balance
@@ -108,8 +110,9 @@ export class MonadBlockchain {
         // Convert from wei to MON (assuming 18 decimals)
         const balanceEth = parseInt(balanceWei, 16) / Math.pow(10, 18);
         balance = `${balanceEth.toFixed(4)} MON`;
-      } catch (error) {
-        console.warn('Failed to get balance:', error);
+      } catch {
+        // eslint-disable-next-line no-console
+        console.warn('Failed to get balance');
         // For demo purposes, show a simulated balance
         balance = `${(Math.random() * 10).toFixed(4)} MON`;
       }
@@ -134,14 +137,14 @@ export class MonadBlockchain {
       });
 
       // Listen for chain changes
-      window.ethereum.on('chainChanged', (chainId: string) => {
+      window.ethereum.on('chainChanged', () => {
         // Reload the page when chain changes
         window.location.reload();
       });
 
       return this.currentWallet;
-    } catch (error) {
-      throw new Error(`Failed to connect MetaMask: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } catch {
+      throw new Error('Failed to connect MetaMask');
     }
   }
 
@@ -154,6 +157,7 @@ export class MonadBlockchain {
       await window.ethereum.request({
         method: 'wallet_addEthereumChain',
         params: [{
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           chainId: `0x${MONAD_CONFIG.CHAIN_ID.toString(16)}`,
           chainName: 'Monad Testnet',
           nativeCurrency: {
@@ -165,7 +169,7 @@ export class MonadBlockchain {
           blockExplorerUrls: [MONAD_CONFIG.EXPLORER_URL]
         }]
       });
-    } catch (error) {
+    } catch {
       // If the chain is already added, this will throw an error, which is fine
       console.log('Monad network may already be added to MetaMask');
     }
@@ -189,7 +193,7 @@ export class MonadBlockchain {
     }
   }
 
-  async sendGameTransaction(action: string, data?: any): Promise<TransactionResult> {
+  async sendGameTransaction(action: string, data?: object): Promise<TransactionResult> {
     if (!this.currentWallet || this.currentWallet.provider !== 'MetaMask') {
       throw new Error('MetaMask wallet required for transactions');
     }
@@ -209,7 +213,9 @@ export class MonadBlockchain {
 
       // Convert game data to hex for transaction data field
       const gameDataString = JSON.stringify(gameData);
-      const gameDataHex = `0x${Buffer.from(gameDataString, 'utf8').toString('hex')}`;
+      const encoder = new TextEncoder();
+      const gameDataBytes = encoder.encode(gameDataString);
+      const gameDataHex = `0x${Array.from(gameDataBytes).map(b => b.toString(16).padStart(2, '0')).join('')}`;
 
       // Prepare transaction parameters for MetaMask
       const transactionParams = {
