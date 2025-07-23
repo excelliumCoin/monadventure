@@ -33,8 +33,8 @@ export default function GamePage() {
       if (!available) {
         setError('MetaMask is required to play this game. Please install MetaMask to continue.');
       }
-    } catch {
-      console.error('MetaMask check failed:', err);
+    } catch (error) {
+      console.error('MetaMask check failed:', error);
     }
   };
 
@@ -45,9 +45,9 @@ export default function GamePage() {
       if (!connected) {
         setError('Failed to connect to Monad testnet. Please check your connection.');
       }
-    } catch {
+    } catch (error) {
       setError('Blockchain initialization failed');
-      console.error('Blockchain init error:', err);
+      console.error('Blockchain init error:', error);
     }
   };
 
@@ -59,7 +59,7 @@ export default function GamePage() {
       const walletInfo = await monadBlockchain.connectMetaMask();
       setWallet(walletInfo);
       setGameMessage('MetaMask connected successfully! All game actions will be recorded on-chain.');
-    } catch {
+    } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to connect MetaMask');
     } finally {
       setLoading(false);
@@ -80,7 +80,7 @@ export default function GamePage() {
       setSession(newSession);
       setGameMessage('Game session started! All your moves will be recorded as blockchain transactions.');
       setLeaderboardRefresh(prev => prev + 1);
-    } catch {
+    } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to start game session');
     } finally {
       setLoading(false);
@@ -140,8 +140,8 @@ export default function GamePage() {
       if (result.newScore > 0) {
         setLeaderboardRefresh(prev => prev + 1);
       }
-    } catch {
-      throw new Error(error instanceof Error ? error.message : 'Move failed');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Move failed');
     }
   };
 
@@ -192,8 +192,8 @@ export default function GamePage() {
       if (result.newScore > 0) {
         setLeaderboardRefresh(prev => prev + 1);
       }
-    } catch {
-      throw new Error(error instanceof Error ? error.message : 'Action failed');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Action failed');
     }
   };
 
@@ -205,7 +205,7 @@ export default function GamePage() {
 
     setLoading(true);
     try {
-      const success = await monadBlockchain.requestTestnetTokens(wallet.address);
+      const success = await monadBlockchain.requestTestnetTokens();
       if (success) {
         setGameMessage('Testnet tokens requested successfully! They should arrive in your wallet shortly.');
         // Refresh balance
