@@ -311,10 +311,10 @@ export class MonadBlockchain {
       };
 
     } catch (error) {
-      console.error('MetaMask transaction failed:', error);
-      
-      // Handle specific MetaMask errors
+      // Handle specific MetaMask errors with improved logging
       if (error instanceof Error) {
+        console.warn('MetaMask transaction error:', error.message);
+        
         if (error.message.includes('User denied') || error.message.includes('rejected')) {
           return {
             hash: '',
@@ -336,18 +336,44 @@ export class MonadBlockchain {
             error: 'Gas estimation failed - check network connection'
           };
         }
+        
+        return {
+          hash: '',
+          success: false,
+          error: error.message
+        };
       }
 
       // Handle empty error objects or unknown errors
-      const errorMessage = error instanceof Error ? error.message : 
-                          (error && typeof error === 'object' && Object.keys(error).length === 0) ? 
-                          'Unknown transaction error - please check MetaMask and try again' :
-                          'Transaction failed';
+      if (error && typeof error === 'object') {
+        const errorKeys = Object.keys(error);
+        if (errorKeys.length === 0) {
+          console.warn('Empty error object received from MetaMask transaction');
+          return {
+            hash: '',
+            success: false,
+            error: 'Transaction failed - please check MetaMask and try again'
+          };
+        }
+        
+        // Try to extract meaningful error information
+        const errorObj = error as Record<string, unknown>;
+        const errorMessage = errorObj.message || errorObj.reason || 'Unknown transaction error';
+        console.warn('MetaMask transaction object error:', errorMessage);
+        
+        return {
+          hash: '',
+          success: false,
+          error: String(errorMessage)
+        };
+      }
 
+      // Fallback for any other error types
+      console.warn('Unknown transaction error type:', typeof error);
       return {
         hash: '',
         success: false,
-        error: errorMessage
+        error: 'Transaction failed - please try again'
       };
     }
   }

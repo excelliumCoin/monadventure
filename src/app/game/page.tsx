@@ -88,8 +88,19 @@ export default function GamePage() {
   };
 
   const handleMove = async (direction: 'north' | 'south' | 'east' | 'west') => {
+    // Early validation checks
     if (!session) {
       setError('No active game session');
+      return;
+    }
+
+    if (!wallet || !isMetaMaskAvailable) {
+      setError('MetaMask wallet required for game actions');
+      return;
+    }
+
+    if (!blockchainConnected) {
+      setError('Not connected to Monad testnet');
       return;
     }
 
@@ -104,7 +115,8 @@ export default function GamePage() {
       });
 
       if (!txResult.success) {
-        throw new Error(txResult.error || 'Blockchain transaction failed');
+        setError(txResult.error || 'Blockchain transaction failed');
+        return;
       }
 
       setTransactionHash(txResult.hash);
@@ -146,8 +158,19 @@ export default function GamePage() {
   };
 
   const handleAction = async (action: GameAction) => {
+    // Early validation checks
     if (!session) {
       setError('No active game session');
+      return;
+    }
+
+    if (!wallet || !isMetaMaskAvailable) {
+      setError('MetaMask wallet required for game actions');
+      return;
+    }
+
+    if (!blockchainConnected) {
+      setError('Not connected to Monad testnet');
       return;
     }
 
@@ -162,7 +185,8 @@ export default function GamePage() {
       });
 
       if (!txResult.success) {
-        throw new Error(txResult.error || 'Blockchain transaction failed');
+        setError(txResult.error || 'Blockchain transaction failed');
+        return;
       }
 
       setTransactionHash(txResult.hash);
@@ -384,8 +408,8 @@ export default function GamePage() {
           </div>
         )}
 
-        {/* Main Game Interface */}
-        {session && (
+        {/* Main Game Interface - Only show when wallet is connected and MetaMask is available */}
+        {session && wallet && isMetaMaskAvailable && (
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Left Column - Game Status */}
             <div className="lg:col-span-1">
@@ -403,7 +427,7 @@ export default function GamePage() {
               <GameControls
                 onMove={handleMove}
                 onAction={handleAction}
-                disabled={!session || loading}
+                disabled={!session || loading || !wallet || !isMetaMaskAvailable}
                 loading={loading}
               />
               
